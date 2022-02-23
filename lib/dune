@@ -1,0 +1,3 @@
+(library
+ (name Soul)
+ (public_name soul.lib)

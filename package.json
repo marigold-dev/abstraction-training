@@ -1,0 +1,21 @@
+{
+    "name": "abstraction-training",
+    "version": "0.0.1",
+    "description": "Tennis Kata to explore ADT in OCaml",
+    "license": "MIT",
+    "scripts": {},
+    "dependencies": {},
+    "devDependencies": {
+        "@opam/dune": "*",
+        "ocaml": ">=4.13",
+        "@opam/ocamlformat": "*",
+        "@opam/ocaml-lsp-server": "1.9.1",
+        "@opam/ocamlformat-rpc": "*"
+    },
+    "resolutions": {
+        "esy-openssl": "esy-packages/esy-openssl#619ae2d46ca981ec26ab3287487ad98b157a01d1"
+    },
+    "esy": {
+        "build": "dune build ."
+    }
+}
