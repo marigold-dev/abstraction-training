@@ -1,4 +1,4 @@
-# Soul Removal
+# Module Training
 
 The purpose of this training is to understand the module system of OCaml and to train to use it.
 
