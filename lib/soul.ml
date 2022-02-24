@@ -1,27 +1,9 @@
-let foo = 3 + 3
+type complex = {
+  r : int;
+  i : int;
+}
 
-let zero =
-  Number.ComplexG.(
-    (* here you can access any identifier from ComplexG module *)
-    identity + identity)
-
-let zero =
-  Number.ComplexG.( + ) Number.ComplexG.identity
-    Number.ComplexG.{ r = 2; i = 3 }
-
-module C = Number.ComplexG
-
-let zero = C.identity
-
-let thats_ok =
-  let open struct
-    include Number.ComplexM
-
-    let one = { r = 1; i = 1 }
-
-    let ( * ) x y =
-      let r = (x.r * y.r) - (x.i * y.i) in
-      let i = Stdlib.( + ) (x.r * y.i) (x.i * y.r) in
-      { r; i }
-  end in
-  one * one
+let add x y = { r = x.r + y.r; i = x.i + y.i }
+let ( + ) = add
+let identity = { r = 0; i = 0 }
+let _complex_val = { r = 2; i = 0 } + { r = 3; i = 5 }

@@ -16,11 +16,15 @@ Pre-requisite:
 In `lib/soul.ml`, you can define a (bad) type to descibe complex numbers in algebraic form and its addition:
 
 ```ocaml
-type complex = { r : int ; i: int}
+type complex = {
+  r : int;
+  i : int;
+}
 
-let add x y = {r = x.r + y.r ; i = x.i + y.i}
+let add x y = { r = x.r + y.r; i = x.i + y.i }
 let ( + ) = add
-let _complex_val = { r = 2 ; i = 0 } + { r = 3 ; i = 5
+let identity = { r = 0; i = 0 }
+let _complex_val = { r = 2; i = 0 } + { r = 3; i = 5 }
 ```
 
 Sadly when you write:
@@ -52,6 +56,7 @@ A primary motivation for modular programming is to package together related defi
 
 Create a `ComplexM` module wich scopes our type and its operation
 
+> By convenvention, the main type inside `My_module` is named `t` ✅ (neither `my_module` ❌ nor `foo` ❌)
 ---
 
 ### Keeping things private
@@ -64,6 +69,7 @@ sig
   type t = { r : int; i : int; }
   val add : t -> t -> t
   val ( + ) : t -> t -> t
+  val identity: t
   val _complex_val : t
 end
 ```
@@ -72,7 +78,7 @@ end
 
 #### Exercice 1:
 
-Create a module signature for the module `ComplexM` which is the signature for the Monoïd of the complex number set with the addition. It means, it only exposes to the outside the type `t` and the infix operator for addition `+`
+Create a module signature for the module `ComplexM` which is the signature for the Monoïd of the complex number set with the addition. It means, it only exposes to the outside the type `t` and the infix operator for addition `+` and the `identity` element.
 
 ---
 
@@ -122,11 +128,11 @@ open `M` imports definitions from `M` and makes them available for local consump
 ---
 
 #### Exercice 3
-Create a new module `ComplexG` which is an algrebraic group for the complex number set with the addition. A group is a monoïd whith an `identity` element and an `inverse` element.
+Create a new module `ComplexG` which is an abelian group for the complex number set with the addition. A **group** is a **monoïd** :
+- where the operation is commutative (so is the addition)
+- with an `inverse` element.
 
-> For the complex addition:
-> - (0, 0) is the neutral additive element
-> -  (-a, i(-b)) is the inverse element of (a, i b)
+> For the complex addition, (-a, i(-b)) is the inverse element of (a, i b)
 
 ---
 
@@ -186,22 +192,146 @@ let thats_ok =
 
 ## Abstraction
 
+### Type abstraction
 
+We often want to make the type `t` opaque to avoid to manipulate it directly. It gives to direct benefits: module's users don't have to known the internal representation of the type and module's developers may change the internal representation without the fear to beak anything that use the module.
 
-- Abstratcion
-    - common interface for multiple modules
-        - functorize the test
-        - functorize the use
-    - separate interfaces for a single module
-        - define a raw module that matches
+```ocaml
+module Stupid_int : sig
+    type t 
+end = struct
+    type t = int
+end
+```
 
+In this exemple, we made the type `SupidInt.t` abstract, other modules do not know its shape. But now it is no more possible to create a value from another module! We need a value creator. By convention, it is often named `make`
 
-RAW si INT and you may have multiple interface
+```ocaml
+module Stupid_int : sig
+    type t 
+    val make : int -> t
+end = struct
+    type t = int
+    let make v = v
+end
+```
+
+---
+
+#### Exercice 4:
+Abstract the type `t` of the modules `ComplexM` and `ComplexG`
+
+---
+
+### Module type
+
+It is possible to isolate the signature of a module in a `module type` definition.
+
+```ocaml
+module type STUPID_INT = sig
+    type t 
+    val make : int -> t
+end
+
+module Stupid_int : STUPID_INT = struct
+    type t = int
+    let make v = v
+end
+
+```
+
+> That module type annotations are therefore not only about checking to see whether a module defines certain items. The annotations also hide items.
+
+We could also validate witout hidding anything:
+```ocaml
+module type STUPID_INT = sig
+    type t 
+    val make : int -> t
+end
+
+module Stupid_int = struct
+    type t = int
+    let make v = v
+end
+
+module Stupid_int_checked : STUPID_INT = Stupid_int
+```
+
+Here `StupidIntChecked.t` is abstract while `StupidInt.t` isn't
+
+Using module types is way to use the same abstraction among several modules:
+```ocaml
+module Stupid_nat : STUPID_INT = struct
+    type t = int
+    let make v = if v>= 0 then v else failwith "this is not a natural integer"
+end
+
+```
+
+---
+
+#### Exercice 5:
+- Replace the signatures by the module types `MONOID` and `GROUP`
+- Create new modules `NaturalM` and `NaturalG` that use those module types
+- Create an exeption and a smart constructor to avoid to create non natural integers
+
+---
+
+### Raw modules
+
+Since module type are a way to specify the signature for a module, it serves also to sperate signatures from a single module. Those kind of module are usally named "raw modules":
+
+```ocaml
+module type MONOID =
+sig
+  type t
+  val ( + ) : t -> t -> t
+  val identity : t
+end
+
+module type GROUP =
+sig
+  include MONOID
+  val inverse : t -> t
+end
+
+module Int_raw = struct
+ type t = int
+ let identity = 0
+ let ( + ) = Stdlib.( + )
+ let inverse v = -v
+end
+
+module IntM : MONOID = Int_raw
+module IntG : GROUP = Int_raw
+```
+
+---
+
+#### Exercice 6:
+- Create `Complex_raw` and `Natural_raw`
+- Redefine all previous module from raw modules
+
+---
+
+Sometime you may need to remove an abstraction:
+```ocaml
+module IntM_public : MONOID with type t = int = Int_raw
+```
+
+Now the `IntM_public` module's signature specifies that `t` and `int` are the same type. It exposes or shares that fact with the world, so we could call these “sharing constraints.”
+
+## Functional module
+
 
 - Contracts
     - FSM
-    - invariancts in the module (fail as early as possible)
+    - invariants in the module 
+    
+## Take aways
 
+- Encode your invariants in the module
+- Fail as fast as possible
 
 
 ## References
