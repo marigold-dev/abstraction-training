@@ -147,6 +147,8 @@ open Number.ComplexG
 
 Opened modules can shadow identifiers present in the current scope, potentially leading to confusing errors as previously shown.
 
+> open statements shadowing an existing identifiertrigger the warning 44. Using `open!` indicates that such a shadowing is intentional and should not trigger the warning.
+
 To avoid unwanted shadowing we can also namespace everything:
 ```ocaml
 let a =
@@ -189,6 +191,10 @@ let thats_ok =
   end in
   one * one
 ```
+
+To ease the readabling of your code, you would use:
+- **module aliasing** instead of global open
+- `let open` when you need to access syntax or infix operators that would shadow others in the scope
 
 ## Abstraction
 
