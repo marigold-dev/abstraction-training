@@ -227,6 +227,8 @@ end
 #### Exercice 4:
 Abstract the type `t` of the modules `ComplexM` and `ComplexG`
 
+> You will propably have to do extra work because of the abstraction. We will see just after how we can solve that.
+
 ---
 
 ### Module type
@@ -278,8 +280,10 @@ end
 
 #### Exercice 5:
 - Replace the signatures by the module types `MONOID` and `GROUP`
-- Create new modules `NaturalM` and `NaturalG` that use those module types
+- Create new modules `NaturalM`, `NaturalG`, `IntM` and `IntG` that use those module types
 - Create an exeption and a smart constructor to avoid to create non natural integers
+
+> There is no group for Natural ... so inverse call should fail
 
 ---
 
