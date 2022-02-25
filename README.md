@@ -192,7 +192,7 @@ let thats_ok =
   one * one
 ```
 
-To ease the readabling of your code, you would use:
+To ease the readability of your code, you would use:
 - **module aliasing** instead of global open
 - `let open` when you need to access syntax or infix operators that would shadow others in the scope
 
