@@ -13,7 +13,7 @@ Pre-requisite:
 
 ## Basics
 
-In `lib/soul.ml`, you can define a type to descibe complex numbers in algebraic form and its addition:
+In `lib/soul.ml`, we defined a type to describe complex numbers in algebraic form and its addition:
 
 ```ocaml
 type complex = {
@@ -33,7 +33,7 @@ Sadly when you write:
 let foo = 3 + 3
 ```
 
-You get
+You get:
 
 ```sh
 let foo = 3 + 3
@@ -63,7 +63,7 @@ Create a `ComplexM` module wich scopes our type and its operation
 
 Signatures are interfaces for structures. A signature specifies which components of a structure are accessible from the outside, and with which type. It can be used to hide some components of a structure (e.g. local function definitions) or export some components with a restricted type. 
 
-Right now our module signature is infered by OCaml as
+Right now our module signature is inferred by OCaml as
 ```ocaml
 sig
   type t = { r : int; i : int; }
@@ -138,7 +138,7 @@ Create a new module `ComplexG` which is an abelian group for the complex number 
 
 #### Opening
 
-Opening a module brings all identifier defined inside the module in the scope of the currrent structure:
+Opening a module brings all identifier defined inside the module in the scope of the current structure:
 ```ocaml
 open Number.ComplexG
 
@@ -153,7 +153,7 @@ let a =
   Number.ComplexG.( + ) Number.ComplexG.identity
     Number.ComplexG.{ r = 2; i = 3 }
 ```
-But that's quite boring, so we can prefere to open module locally:
+But that's quite boring, so we can prefer to open module locally:
 ```ocaml
 let b = 
     Number.ComplexG.(
@@ -279,7 +279,7 @@ end
 
 ### Raw modules
 
-Since module type are a way to specify the signature for a module, it serves also to sperate signatures from a single module. Those kind of modules are usally named "raw modules":
+Since module type are a way to specify the signature for a module, it serves also to seperate signatures from a single module. Those kind of modules are usally named "raw modules":
 
 ```ocaml
 module type MONOID =
@@ -344,14 +344,14 @@ module Zero = struct let x = 0 end
 module One = IncX (Zero)
 ```
 
-A more realistic exemple would be to encode some game rules in the module system, i wrote a long exemple about how to [encode D&D 5 Races with functors](https://dev.to/oteku/dungeon-dragons-fonctors-5aka)
+A more complex exemple would be to encode some game rules in the module system, i wrote a long exemple about how to [encode D&D 5e Races with functors](https://dev.to/oteku/dungeon-dragons-fonctors-5aka)
 
 
 ### Autoextension of modules
 
 Functors give you a way of extending existing modules with new functionality in a standardized way.
 
-If we have thos module types:
+If we have those module types:
 ```ocaml
 module type MONOID = sig
   type t
@@ -435,14 +435,14 @@ module type STACK = sig
 end
 ```
 
-We want to be able to create stacks in memory but also to be able to serliaze them with Irmin or PostgreSQL. The serialization layer is a dependency we would like to inject to our system.
+We want to be able to create stacks in memory but also to be able to serialize them with Irmin or PostgreSQL. The serialization layer is a dependency we would like to inject to our system.
 
 - Create a functor that produce a `STACK` datastructure.
 - Create all is needed to implement the module `Stack_memory` of type `STACK` and produced using a functor
 
 ---
 
-> Virtual modules while dune specific is another tactic to achieve dependency injection.
+> Virtual modules while dune specific is another tactic to achieve dependency injection. They would be preferred to functor for that purpose performance-wise. That said, they make code harder to debug.
 
 ## More on modules
 
@@ -454,7 +454,7 @@ OCaml is broken up into two parts:
 
 OCaml provides a way around this stratification in the form of first-class modules. First-class modules are ordinary values that can be created from and converted back to regular modules.  
 
-First class module are convinient if you have a function that produce a module from a value, or a value from a module.
+First class module are convenient if you have a function that produce a module from a value, or a value from a module.
 
 ```ocaml
 module type X = sig
@@ -479,7 +479,7 @@ let two = make_int_from_X (module Two)
 (* produce a value from a first-class module *)
 ```
 
-> Syntax is a little bit akward and most designs that can be done with first-class modules can be simulated without them.
+> Syntax is a little bit awkward and most designs that can be done with first-class modules can be stimulated without them.
 
 ### Generative Functors
 
