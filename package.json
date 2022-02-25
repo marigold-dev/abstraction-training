@@ -1,0 +1,18 @@
+{
+    "name": "module-training",
+    "version": "0.0.1",
+    "description": "Module training in OCaml",
+    "license": "MIT",
+    "scripts": {},
+    "dependencies": {},
+    "devDependencies": {
+        "@opam/dune": "*",
+        "ocaml": ">=4.13",
+        "@opam/ocamlformat": "*",
+        "@opam/ocaml-lsp-server": "*",
+        "@opam/ocamlformat-rpc": "*"
+    },
+    "esy": {
+        "build": "dune build ."
+    }
+}

@@ -10,7 +10,8 @@
 
 # ocamlbuild working directory
 _build/
-
+.vscode
+.DS_Store
 # ocamlbuild targets
 *.byte
 *.native
@@ -27,3 +28,4 @@ setup.log
 
 # Local OPAM switch
 _opam/
+_esy/
