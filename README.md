@@ -328,12 +328,158 @@ OCaml’s type system is stratified: module values are distinct from other value
 
 >  OCaml functors are neither [Haskell Functor](https://wiki.haskell.org/Functor) nor [C++ functors](https://en.cppreference.com/w/cpp/utility/functional)
 
+### Index module by values
+
+Sometime you have several modules that share the same module type while they have different immutable value. It is practical to use a functor to produce them:
+```ocaml
+module type X = sig
+  val x : int
+end
+
+module IncX (M : X) = struct
+  let x = M.x + 1
+end
+
+module Zero = struct let x = 0 end
+module One = IncX (Zero)
+```
+
+A more realistic exemple would be to encode some game rules in the module system, i wrote a long exemple about how to [encode D&D 5 Races with functors](https://dev.to/oteku/dungeon-dragons-fonctors-5aka)
+
+
+### Autoextension of modules
+
+Functors give you a way of extending existing modules with new functionality in a standardized way.
+
+If we have thos module types:
+```ocaml
+module type MONOID = sig
+  type t
+
+  val ( + ) : t -> t -> t
+  val identity : t
+end
+
+module type INVERSE = sig
+  type t
+
+  val inverse : t -> t
+end
+
+module type GROUP = sig
+  include MONOID
+  include INVERSE with type t := t
+end
+```
+
+We can define a functor `Group.Make` that create a Group from a MONOID and a module with the inverse operation:
+
+```ocaml
+
+module Group = struct
+  module Make (M : MONOID) (I : INVERSE) = struct
+    type t = M.t
+
+    let ( + ) = M.( + )
+    let identity = M.identity
+    let inverse = I.inverse
+  end
+end
+
+module IntM : MONOID = struct
+  type t = int
+
+  let identity = 0
+  let ( + ) = Stdlib.( + )
+end
+
+module IntI : INVERSE = struct
+  type t = int
+
+  let inverse v = -v
+end
+
+module IntG = Group.Make (IntM) (IntI)
+```
+
+> Regarding this purpose, we can achieve the same goal with raw modules and functors. In general, prefere the raw modules tactic because it have better performance at runtime. But sometime it is usefull to compose module, so it is important to know how to do it.
+
+---
+
+#### Exercice 7: 
+Create the `NatG` and `CompG`, respectively natural integer group and complex group, using functors.
+
+---
+
+### Dependency injection
+
+Makes the implementations of some components of a system swappable. This is particularly useful when you want to mock up parts of your system for testing and simulation purposes. 
+
+---
+
+#### Exercice 8: 
+
+We want to create stack data datastructure.
+Here an exemple of a possible module type for a stack:
+```ocaml
+module type STACK = sig
+  type 'a t
+  exception Empty
+  val empty : 'a t
+  val is_empty : 'a t -> bool
+  val push : 'a -> 'a t -> 'a t
+  val peek : 'a t -> 'a
+  val pop : 'a t -> 'a t
+  val size : 'a t -> int
+  val to_list : 'a t -> 'a list
+end
+```
+
+We want to be able to create stacks in memory but also to be able to serliaze them with Irmin or PostgreSQL. The serialization layer is a dependency we would like to inject to our system.
+
+- Create a functor that produce a `STACK` datastructure.
+- Create all is needed to implement the module `Stack_memory` of type `STACK` and produced using a functor
+
+---
+
+> Virtual modules while dune specific is another tactic to achieve dependency injection.
 
 ## More on modules
 
 ### First class module
 
+OCaml is broken up into two parts: 
+- a core language that is concerned with values and types
+- a module language that is concerned with modules and module signatures. 
 
+OCaml provides a way around this stratification in the form of first-class modules. First-class modules are ordinary values that can be created from and converted back to regular modules.  
+
+First class module are convinient if you have a function that produce a module from a value, or a value from a module.
+
+```ocaml
+module type X = sig
+  val x : int
+end
+
+
+let make_X_from_int (x : int) : (module X) =
+  (module struct
+    let x = x
+  end)
+
+
+let two_module_as_value = make_X_from_int 2
+(* produce a a first-class module from a value *)
+
+module Two = (val two_module_as_value)
+(* unwrap the module in the module level *)
+
+let make_int_from_X (module A : X) : int = A.x
+let two = make_int_from_X (module Two)
+(* produce a value from a first-class module *)
+```
+
+> Syntax is a little bit akward and most designs that can be done with first-class modules can be simulated without them.
 
 ### Generative Functors
 
@@ -355,7 +501,7 @@ end = struct
 end
 ```
 This is supposed to generate a new unique-id module with a distinct type every time it’s called. But if you call it on the same module, you’ll get the same type, which is totally wrong.
-If you would run this code in [utop]():
+If you would run this code in [utop](https://opam.ocaml.org/packages/utop/):
 ```ocaml
 module Empty = struct end
 module Index1 = Make_index (Empty)
@@ -419,6 +565,7 @@ Error: This expression has type Index2.t but an expression was expected of type
  In particular, this sentence from the manual is of importance: 
  > As a side-effect of this generativity, one is allowed to unpack first-class modules in the body of generative functors.
 
+_If you loved [SML](https://smlfamily.github.io/), you can make all functors generatives by passing this option `-no-app-funct` to [ocamlopt](https://www.ocaml.org/releases/4.13/htmlman/native.html) ... but you wouldn't_
 
 ## Take aways
 
@@ -430,3 +577,4 @@ Error: This expression has type Index2.t but an expression was expected of type
 - [OCaml Manual](https://ocaml.org/manual/moduleexamples.html#)
 - [OCaml Programming: Correct + Efficient + Beautiful](https://cs3110.github.io/textbook/chapters/modules/intro.html)
 - [OCaml Real World](https://dev.realworldocaml.org/files-modules-and-programs.html)
+- [Xavier Leroy's Paper on applicative functors - 1995](https://caml.inria.fr/pub/papers/xleroy-applicative_functors-popl95.pdf)
