@@ -29,4 +29,3 @@ setup.log
 # Local OPAM switch
 _opam/
 _esy/
-esy.lock

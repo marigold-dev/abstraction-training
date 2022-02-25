@@ -9,7 +9,7 @@
         "@opam/dune": "*",
         "ocaml": ">=4.13",
         "@opam/ocamlformat": "*",
-        "@opam/ocaml-lsp-server": "1.9.1",
+        "@opam/ocaml-lsp-server": "*",
         "@opam/ocamlformat-rpc": "*"
     },
     "esy": {

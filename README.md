@@ -13,7 +13,7 @@ Pre-requisite:
 
 ## Basics
 
-In `lib/soul.ml`, you can define a (bad) type to descibe complex numbers in algebraic form and its addition:
+In `lib/soul.ml`, you can define a type to descibe complex numbers in algebraic form and its addition:
 
 ```ocaml
 type complex = {
@@ -136,7 +136,7 @@ Create a new module `ComplexG` which is an abelian group for the complex number 
 
 ---
 
-#### opening
+#### Opening
 
 Opening a module brings all identifier defined inside the module in the scope of the currrent structure:
 ```ocaml
@@ -149,13 +149,13 @@ Opened modules can shadow identifiers present in the current scope, potentially 
 
 To avoid unwanted shadowing we can also namespace everything:
 ```ocaml
-let zero =
+let a =
   Number.ComplexG.( + ) Number.ComplexG.identity
     Number.ComplexG.{ r = 2; i = 3 }
 ```
 But that's quite boring, so we can prefere to open module locally:
 ```ocaml
-let zero = 
+let b = 
     Number.ComplexG.(
         (* here you can access any identifier from ComplexG module *)
         identity + identity
@@ -163,7 +163,7 @@ let zero =
 ```
 Parenthesis management is a hell, so we would rather use the `let open` syntax:
 ```ocaml
-let zero = 
+let b = 
     let open Number.ComplexG in
     identity + identity
 ```
@@ -279,7 +279,7 @@ end
 
 ### Raw modules
 
-Since module type are a way to specify the signature for a module, it serves also to sperate signatures from a single module. Those kind of module are usally named "raw modules":
+Since module type are a way to specify the signature for a module, it serves also to sperate signatures from a single module. Those kind of modules are usally named "raw modules":
 
 ```ocaml
 module type MONOID =
@@ -321,13 +321,105 @@ module IntM_public : MONOID with type t = int = Int_raw
 
 Now the `IntM_public` module's signature specifies that `t` and `int` are the same type. It exposes or shares that fact with the world, so we could call these “sharing constraints.”
 
-## Functional module
+## Functor
+
+**A functor is simply a “function” from modules to modules**
+OCaml’s type system is stratified: module values are distinct from other values, so functions from modules to modules cannot be written or used in the same way as functions from values to values. But conceptually, functors really are just functions.
+
+>  OCaml functors are neither [Haskell Functor](https://wiki.haskell.org/Functor) nor [C++ functors](https://en.cppreference.com/w/cpp/utility/functional)
 
 
-- Contracts
-    - FSM
-    - invariants in the module 
+## More on modules
+
+### First class module
+
+
+
+### Generative Functors
+
+OCaml functors are applicative: when run repeatedly on the same input module, they generate the same types in the output.
+This is sometime not what you want:
+```ocaml
+module Make_index (Unit : sig end) : sig
+  type t
+
+  val allocate : unit -> t
+end = struct
+  type t = int
+
+  let id = ref 0
+
+  let allocate () =
+    let () = incr id in
+    !id
+end
+```
+This is supposed to generate a new unique-id module with a distinct type every time it’s called. But if you call it on the same module, you’ll get the same type, which is totally wrong.
+If you would run this code in [utop]():
+```ocaml
+module Empty = struct end
+module Index1 = Make_index (Empty)
+module Index2 = Make_index (Empty);;
     
+Index1.allocate () = Index2.allocate ();;
+```
+We get:
+```ocaml
+Index1.allocate () = Index2.allocate () ;;
+
+- : bool = true
+```
+This is clearly not what we want. If we used different (but identical) modules as inputs, however, we would have had no problem.
+```ocaml
+module Index1 = Make_index (struct end)
+module Index2 = Make_index (struct end);;
+    
+Index1.allocate () = Index2.allocate ();;
+```
+We get an Error:
+```ocaml
+Error: This expression has type Index2.t but an expression was expected of type
+  Index1.t
+```
+Generative functors work like the second case every time, which for this kind of functor makes more sense. 
+We can mark a functor as generative by having a last of the form `()`.
+
+So, we can redo our example as follows:
+
+```ocaml
+module Make_index () : sig
+  type t
+
+  val allocate : unit -> t
+end = struct
+  type t = int
+
+  let id = ref 0
+
+  let allocate () =
+    let () = incr id in
+    !id
+end
+```
+And now, there’s every invocation of this functor produces a fresh type.
+```ocaml
+module Index1 = Make_index ()
+module Index2 = Make_index ();;
+    
+Index1.allocate () = Index2.allocate ();;
+```
+We get an Error:
+```ocaml
+Error: This expression has type Index2.t but an expression was expected of type
+  Index1.t
+```
+
+ In OCaml, generative functors are used in general in combination with first class modules to have functions that generates a fresh type at each application. 
+ This has various use cases (heterogeneous maps, emulating singletons types, ...). 
+ In particular, this sentence from the manual is of importance: 
+ > As a side-effect of this generativity, one is allowed to unpack first-class modules in the body of generative functors.
+
+
 ## Take aways
 
 - Encode your invariants in the module
